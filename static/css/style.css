@@ -615,6 +615,72 @@ a { color: inherit; text-decoration: none; }
 }
 
 /* ------------------------------------------------------------------ */
+/* Video modal                                                         */
+/* ------------------------------------------------------------------ */
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    inset: 0;
+    background: rgba(15, 15, 15, 0.75);
+    align-items: center;
+    justify-content: center;
+    padding: 2rem;
+    z-index: 1000;
+}
+
+.modal-overlay.is-open { display: flex; }
+
+.modal-content {
+    position: relative;
+    width: 100%;
+    max-width: 860px;
+    background: var(--paper-card);
+    border-radius: var(--radius-md);
+    padding: 1rem;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+}
+
+.modal-close {
+    position: absolute;
+    top: -14px;
+    right: -14px;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: none;
+    background: var(--ink);
+    color: var(--paper);
+    font-size: 1.25rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: background 0.2s;
+}
+
+.modal-close:hover { background: var(--hero-accent); }
+
+.modal-video-wrapper {
+    position: relative;
+    width: 100%;
+    padding-top: 56.25%;
+    border-radius: var(--radius-sm);
+    overflow: hidden;
+    background: #000;
+}
+
+.modal-video-wrapper iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+}
+
+/* ------------------------------------------------------------------ */
 /* Responsive                                                          */
 /* ------------------------------------------------------------------ */
 
@@ -630,4 +696,5 @@ a { color: inherit; text-decoration: none; }
     .hero { padding: 3rem 1rem 2rem; }
     .hero-actions { flex-direction: column; width: 100%; }
     .hero-actions .btn-primary { width: 100%; text-align: center; }
+    .modal-close { top: -12px; right: -12px; width: 32px; height: 32px; }
 }
