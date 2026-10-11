@@ -98,3 +98,71 @@ def create_user(name, email, password):
     conn.commit()
     conn.close()
     return user_id
+
+
+def get_user_by_id(user_id):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT id, name, email, created_at FROM users WHERE id = ?", (user_id,)
+    ).fetchone()
+    conn.close()
+    return row
+
+
+def get_expense_summary(user_id):
+    conn = get_db()
+    row = conn.execute(
+        "SELECT COUNT(*) AS count, COALESCE(SUM(amount), 0) AS total FROM expenses WHERE user_id = ?",
+        (user_id,),
+    ).fetchone()
+    conn.close()
+    return row
+
+
+def get_recent_expenses(user_id, limit=10):
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT date, description, category, amount FROM expenses "
+        "WHERE user_id = ? ORDER BY date DESC, id DESC LIMIT ?",
+        (user_id, limit),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_category_breakdown(user_id):
+    conn = get_db()
+    rows = conn.execute(
+        "SELECT category, SUM(amount) AS total FROM expenses "
+        "WHERE user_id = ? GROUP BY category ORDER BY total DESC",
+        (user_id,),
+    ).fetchall()
+    conn.close()
+    return [dict(r) for r in rows]
+
+
+def get_sample_profile_data():
+    """Placeholder figures shown on the profile page when a user has no expenses."""
+    transactions = [
+        {"date": "2025-04-12", "description": "Groceries", "category": "Food", "amount": 850.00},
+        {"date": "2025-04-11", "description": "Metro card recharge", "category": "Transport", "amount": 500.00},
+        {"date": "2025-04-10", "description": "Electricity bill", "category": "Bills", "amount": 2200.00},
+        {"date": "2025-04-08", "description": "Pharmacy", "category": "Health", "amount": 650.00},
+        {"date": "2025-04-06", "description": "Movie night", "category": "Entertainment", "amount": 700.00},
+        {"date": "2025-04-05", "description": "New sneakers", "category": "Shopping", "amount": 3200.00},
+        {"date": "2025-04-03", "description": "Dinner out", "category": "Food", "amount": 1450.00},
+        {"date": "2025-04-02", "description": "Miscellaneous", "category": "Other", "amount": 2900.75},
+    ]
+    totals = {}
+    for t in transactions:
+        totals[t["category"]] = totals.get(t["category"], 0) + t["amount"]
+    categories = [
+        {"category": c, "total": v}
+        for c, v in sorted(totals.items(), key=lambda kv: kv[1], reverse=True)
+    ]
+    return {
+        "transactions": transactions,
+        "categories": categories,
+        "total": sum(t["amount"] for t in transactions),
+        "count": len(transactions),
+    }

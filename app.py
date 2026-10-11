@@ -1,9 +1,21 @@
 import sqlite3
+from datetime import datetime
 
 from flask import Flask, flash, redirect, render_template, request, session, url_for
 from werkzeug.security import check_password_hash
 
-from database.db import create_user, get_db, get_user_by_email, init_db, seed_db
+from database.db import (
+    create_user,
+    get_category_breakdown,
+    get_db,
+    get_expense_summary,
+    get_recent_expenses,
+    get_sample_profile_data,
+    get_user_by_email,
+    get_user_by_id,
+    init_db,
+    seed_db,
+)
 
 app = Flask(__name__)
 app.secret_key = "spendly-dev-secret-key"  # dev-only placeholder, not for production
@@ -103,8 +115,7 @@ def login():
         return invalid_credentials_error
 
     session["user_id"] = user["id"]
-    flash("Welcome back!")
-    return redirect(url_for("landing"))
+    return redirect(url_for("profile"))
 
 
 @app.route("/logout")
@@ -124,14 +135,49 @@ def privacy():
     return render_template("privacy.html")
 
 
+@app.route("/profile")
+def profile():
+    user_id = session.get("user_id")
+    if not user_id:
+        return redirect(url_for("login"))
+
+    user = get_user_by_id(user_id)
+    if not user:
+        session.pop("user_id", None)
+        return redirect(url_for("login"))
+
+    summary = get_expense_summary(user_id)
+    member_since = datetime.strptime(user["created_at"], "%Y-%m-%d %H:%M:%S").strftime("%d %b %Y")
+
+    if summary["count"]:
+        data = {
+            "total": summary["total"],
+            "count": summary["count"],
+            "transactions": get_recent_expenses(user_id),
+            "categories": get_category_breakdown(user_id),
+        }
+        is_sample = False
+    else:
+        data = get_sample_profile_data()
+        is_sample = True
+
+    return render_template(
+        "profile.html",
+        user=user,
+        member_since=member_since,
+        is_sample=is_sample,
+        total=data["total"],
+        count=data["count"],
+        top_category=data["categories"][0]["category"],
+        transactions=data["transactions"],
+        categories=data["categories"],
+        max_category_total=data["categories"][0]["total"],
+    )
+
+
 # ------------------------------------------------------------------ #
 # Placeholder routes — students will implement these                  #
 # ------------------------------------------------------------------ #
-
-@app.route("/profile")
-def profile():
-    return "Profile page — coming in Step 4"
-
 
 @app.route("/expenses/add")
 def add_expense():
